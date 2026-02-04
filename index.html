@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VALENTINE v2.0</title>
+  <style>
+    :root{
+      --bg:#050505;
+      --panel:#060a06;
+      --border:#1f3b1f;
+      --text:#b7ffb7;
+      --accent:#7cff7c;
+      --danger:#ff9b9b;
+    }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font:16px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    .wrap{max-width:900px;margin:0 auto;padding:28px 18px 70px;}
+    .title{color:var(--accent);opacity:.95;margin:0 0 10px 0;}
+    .panel{
+      border:1px solid var(--border);
+      background:var(--panel);
+      padding:16px;
+      border-radius:12px;
+      box-shadow:0 0 0 1px rgba(124,255,124,.06) inset;
+    }
+    .log{
+      white-space:pre-wrap;
+      min-height:300px;
+      overflow:auto;
+      padding-bottom:6px;
+    }
+    .row{display:flex;gap:10px;margin-top:14px;}
+    input{
+      flex:1;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid #214021;
+      background:#020402;
+      color:var(--text);
+      outline:none;
+    }
+    button{
+      padding:10px 14px;
+      border-radius:10px;
+      border:1px solid #214021;
+      background:#0b160b;
+      color:var(--text);
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    button:hover{filter:brightness(1.12);}
+    .hint{margin-top:10px;opacity:.75;font-size:13px;}
+    .success{color:var(--accent);}
+    .fail{color:var(--danger);}
+    .dim{opacity:.8;}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h3 class="title">VALENTINE v2.0 - Secure Session Initialising…</h3>
+
+    <div class="panel">
+      <div id="log" class="log"></div>
+
+      <div class="row">
+        <input id="userInput" type="text" placeholder="type answer + press Enter" autocomplete="off" />
+        <button id="enterBtn">Enter</button>
+        <button id="resetBtn" title="Restart">Reset</button>
+      </div>
+
+      <div id="hint" class="hint"></div>
+    </div>
+  </div>
+
+<script>
+  // =========================
+  // QUEST SETUP (yours)
+  // =========================
+  const steps = [
+    {
+      prompt: "AUTH 01: What month was our first date? (one word, lowercase)",
+      answers: ["january", "jan"],
+      reveal: "✅ Access granted. ENVELOPE 1 unlocked: check where we keep the mugs."
+    },
+    {
+      prompt: "AUTH 02: What do we love to do the most? (one word)",
+      answers: ["eat", "eating"],
+      reveal: "✅ Correct. ENVELOPE 2 unlocked: check the fridge."
+    },
+    {
+      prompt: "AUTH 03: Decode this (A1Z26): 12-5-7-15",
+      answers: ["lego"],
+      reveal: "✅ Decode accepted. ENVELOPE 3 unlocked: look under something cosy (blanket/sofa)."
+    },
+    {
+      prompt: "AUTH 04: Where can we find Ottie and Otters World? (one word)",
+      answers: ["minecraft"],
+      reveal: "✅ World located. ENVELOPE 4 unlocked: go to the place we charge things."
+    },
+    {
+      prompt: "FINAL: Enter the password to deploy Valentine v2.0 (three words)",
+      answers: ["otters in love"],
+      reveal:
+`✅ DEPLOYMENT COMPLETE.
+
+PATCH NOTES - VALENTINE v2.0
+- Added: nice food (unlocked in ENVELOPE 2)
+- Added: LEGO co-op build (ENVELOPE 3)
+- Added: Minecraft date in Otters World (ENVELOPE 4)
+- Fixed: not enough kisses bug
+
+Now open ENVELOPE 5.`
+    }
+  ];
+
+  const bootLines = [
+    "Booting…",
+    "Establishing secure connection…",
+    "Loading relationship database…",
+    "Verifying boyfriend credentials…",
+    "Ready."
+  ];
+  // =========================
+
+  const logEl = document.getElementById("log");
+  const inputEl = document.getElementById("userInput");
+  const enterBtn = document.getElementById("enterBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const hintEl = document.getElementById("hint");
+
+  let i = 0;
+
+  function normalise(s){
+    return (s || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .replace(/[.,!?:;"'`()]/g, "");
+  }
+
+  function write(line, cls=""){
+    const div = document.createElement("div");
+    if (cls) div.className = cls;
+    div.textContent = line;
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function showPrompt(){
+    hintEl.textContent = "Tip: answers are not case sensitive.";
+    write("");
+    write("> " + steps[i].prompt, "dim");
+    inputEl.value = "";
+    inputEl.focus();
+  }
+
+  function submit(){
+    const raw = inputEl.value;
+    if (!raw) return;
+
+    const user = normalise(raw);
+    write(raw);
+
+    const accepted = steps[i].answers.map(normalise);
+
+    if (accepted.includes(user)){
+      write(steps[i].reveal, "success");
+      i++;
+
+      if (i < steps.length){
+        showPrompt();
+      } else {
+        hintEl.textContent = "Done. Close this tab and proceed to the next clue.";
+        inputEl.disabled = true;
+        enterBtn.disabled = true;
+      }
+    } else {
+      write("❌ Incorrect. Try again.", "fail");
+      inputEl.value = "";
+      inputEl.focus();
+    }
+  }
+
+  function resetAll(){
+    logEl.innerHTML = "";
+    inputEl.disabled = false;
+    enterBtn.disabled = false;
+    i = 0;
+    bootLines.forEach((l) => write(l));
+    showPrompt();
+  }
+
+  enterBtn.addEventListener("click", submit);
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") submit();
+  });
+  resetBtn.addEventListener("click", resetAll);
+
+  // Boot sequence
+  resetAll();
+</script>
+</body>
+</html>
